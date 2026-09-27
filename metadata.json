@@ -1,0 +1,6 @@
+{
+  "name": "Kie Studio - Visual Generation Workflow",
+  "description": "Production-ready visual generation workflow designer featuring prompt generation, image synthesis, and seamless image-to-video generation powered by the Kie.ai API gateway.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
