@@ -15,6 +15,7 @@ import {
   X,
   Upload,
   Image as ImageIcon,
+  Shapes,
 } from 'lucide-react';
 import { PromptOptions, GeneratedPromptItem } from '../types';
 import {
@@ -27,8 +28,9 @@ import {
   DEKORASI_OPTIONS,
   FLOWER_OPTIONS,
   BASIN_OPTIONS,
+  BASIN_SHAPE_OPTIONS,
   BAMBOO_OPTIONS,
-  CAMERA_ANGLE_LOCKED,
+  CAMERA_DISTANCE_OPTIONS,
 } from '../data/promptOptions';
 import { requestPrompts } from '../services/api';
 import { PromptHistoryItem, getPromptHistory, savePromptHistory, deletePromptHistory, clearPromptHistory } from '../services/promptHistory';
@@ -49,7 +51,9 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
   const [dekorasi, setDekorasi] = useState('Random');
   const [flower, setFlower] = useState('Random');
   const [basin, setBasin] = useState('Random');
+  const [basinShape, setBasinShape] = useState('Random');
   const [bamboo, setBamboo] = useState('Random');
+  const [cameraDistance, setCameraDistance] = useState('Random');
   const [referenceImageData, setReferenceImageData] = useState<string | null>(null);
   const [referenceImageName, setReferenceImageName] = useState<string>('');
 
@@ -79,8 +83,10 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
       dekorasi,
       flower,
       basin,
+      basinShape,
       bamboo,
-      cameraAngle: CAMERA_ANGLE_LOCKED,
+      cameraDistance,
+      cameraAngle: cameraDistance,
       referenceImageData: referenceImageData || undefined,
       referenceImageName: referenceImageName || undefined,
     };
@@ -340,13 +346,13 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
               </select>
             </div>
 
-            {/* Basin */}
+            {/* Basin Material */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label htmlFor="select-basin" className="font-medium text-stone-700">
-                  Basin
+                  Basin Material
                 </label>
-                <span className="text-[10px] text-stone-400">3-Level Variance</span>
+                <span className="text-[10px] text-stone-400">Stone & Texture</span>
               </div>
               <select
                 id="select-basin"
@@ -360,6 +366,44 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Basin Shape Menu (Controls Actual Geometric Silhouette) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label htmlFor="select-basin-shape" className="font-medium text-stone-700 flex items-center space-x-1">
+                  <Shapes className="h-3.5 w-3.5 text-stone-600" />
+                  <span>Basin Shape</span>
+                </label>
+                {basinShape !== 'Random' ? (
+                  <span className="inline-flex items-center rounded-md bg-stone-900 px-1.5 py-0.5 text-[10px] font-semibold text-white" title="Strict Shape Compliance: Explicit user selection strictly preserved across all 3 prompts">
+                    Strict Explicit
+                  </span>
+                ) : referenceImageData ? (
+                  <span className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200" title="Reference image basin shape used when shape is Random">
+                    Ref Shape Priority
+                  </span>
+                ) : null}
+              </div>
+              <select
+                id="select-basin-shape"
+                value={basinShape}
+                onChange={(e) => setBasinShape(e.target.value)}
+                className="w-full rounded-xl border border-stone-200 bg-stone-50/50 px-3 py-2 text-stone-800 focus:border-stone-900 focus:bg-white focus:outline-hidden cursor-pointer"
+              >
+                {BASIN_SHAPE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-stone-500 leading-tight">
+                {basinShape !== 'Random'
+                  ? `Strict silhouette: ${basinShape}. All 3 prompts strictly preserve this silhouette.`
+                  : referenceImageData
+                  ? 'Reference image determines basin silhouette when Random is selected.'
+                  : 'Controls the actual geometric silhouette of the water basin.'}
+              </p>
             </div>
 
             {/* Bamboo */}
@@ -384,19 +428,35 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
               </select>
             </div>
 
-            {/* Camera Angle (LOCKED) */}
-            <div className="space-y-1.5 rounded-xl border border-stone-200 bg-stone-100/70 p-3">
+            {/* Camera Distance Menu (Controls Camera Distance & Framing only) */}
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-stone-800 flex items-center space-x-1">
+                <label htmlFor="select-camera-distance" className="font-medium text-stone-700 flex items-center space-x-1">
                   <Compass className="h-3.5 w-3.5 text-stone-600" />
-                  <span>Camera Angle</span>
-                </span>
-                <span className="inline-flex items-center space-x-1 rounded-md bg-stone-800 px-2 py-0.5 text-[10px] font-semibold text-white">
-                  <Lock className="h-2.5 w-2.5 mr-0.5" /> Locked
-                </span>
+                  <span>Camera Distance</span>
+                </label>
+                {referenceImageData && (
+                  <span className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200" title="Reference image is the primary source for camera distance & framing">
+                    Ref Image Priority
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] leading-relaxed text-stone-600">
-                {CAMERA_ANGLE_LOCKED}
+              <select
+                id="select-camera-distance"
+                value={cameraDistance}
+                onChange={(e) => setCameraDistance(e.target.value)}
+                className="w-full rounded-xl border border-stone-200 bg-stone-50/50 px-3 py-2 text-stone-800 focus:border-stone-900 focus:bg-white focus:outline-hidden"
+              >
+                {CAMERA_DISTANCE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-stone-500 leading-tight">
+                {referenceImageData
+                  ? 'Reference Image is the primary source for Camera Distance & Framing across all 3 prompts.'
+                  : 'Controls subject framing & distance only (not camera direction, tilt, or rotation).'}
               </p>
             </div>
           </div>
@@ -529,15 +589,23 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
               </div>
 
               {/* Scene Design Dimensional Breakdown */}
-              <div className="grid grid-cols-2 gap-2 text-[11px] text-stone-600 sm:grid-cols-4 pt-1">
+              <div className="grid grid-cols-2 gap-2 text-[11px] text-stone-600 sm:grid-cols-5 pt-1">
                 <div className="rounded-lg bg-stone-100/70 p-2">
-                  <span className="block font-medium text-stone-500 text-[10px] uppercase">Bamboo Form & Pos</span>
-                  <span className="text-stone-800 font-medium">{item.sceneDetails.bambooPosition}</span>
+                  <span className="block font-medium text-stone-500 text-[10px] uppercase">Basin Shape</span>
+                  <span className="text-stone-800 font-semibold truncate block" title={item.sceneDetails.basinShape || 'Selected Silhouette'}>
+                    {item.sceneDetails.basinShape || 'Selected Silhouette'}
+                  </span>
                 </div>
                 <div className="rounded-lg bg-stone-100/70 p-2">
-                  <span className="block font-medium text-stone-500 text-[10px] uppercase">Basin Variation (3-Lvl)</span>
+                  <span className="block font-medium text-stone-500 text-[10px] uppercase">Basin Material</span>
                   <span className="text-stone-800 font-medium truncate block" title={item.sceneDetails.basinDetails}>
                     {item.sceneDetails.basinDetails}
+                  </span>
+                </div>
+                <div className="rounded-lg bg-stone-100/70 p-2">
+                  <span className="block font-medium text-stone-500 text-[10px] uppercase">Bamboo Form</span>
+                  <span className="text-stone-800 font-medium truncate block" title={item.sceneDetails.bambooPosition}>
+                    {item.sceneDetails.bambooPosition}
                   </span>
                 </div>
                 <div className="rounded-lg bg-stone-100/70 p-2">
@@ -547,8 +615,10 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
                   </span>
                 </div>
                 <div className="rounded-lg bg-stone-100/70 p-2">
-                  <span className="block font-medium text-stone-500 text-[10px] uppercase">Camera DNA</span>
-                  <span className="text-stone-800 font-medium">Locked 3/4 Environmental</span>
+                  <span className="block font-medium text-stone-500 text-[10px] uppercase">Camera Distance</span>
+                  <span className="text-stone-800 font-medium truncate block" title={item.sceneDetails.cameraDistance || 'Medium Shot'}>
+                    {item.sceneDetails.cameraDistance || 'Medium Shot'}
+                  </span>
                 </div>
               </div>
             </div>

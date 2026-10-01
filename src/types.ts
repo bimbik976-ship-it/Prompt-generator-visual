@@ -60,8 +60,10 @@ export interface PromptOptions {
   dekorasi: string;
   flower: string;
   basin: string;
+  basinShape?: string; // Controls actual outer geometric silhouette of water basin
   bamboo?: string;
-  cameraAngle: string; // locked
+  cameraAngle?: string;
+  cameraDistance?: string; // Controls camera distance & framing only
   referenceImageData?: string; // optional data URL sent server-side for visual analysis
   referenceImageName?: string;
 }
@@ -76,8 +78,10 @@ export interface GeneratedPromptItem {
     composition: string;
     bambooPosition: string;
     basinDetails: string;
+    basinShape?: string;
     lightingAndAtmosphere: string;
     focalPoint: string;
+    cameraDistance?: string;
   };
   timestamp: number;
 }

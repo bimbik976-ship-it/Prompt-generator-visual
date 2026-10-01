@@ -3,6 +3,10 @@ import {
   GeneratedPromptItem,
 } from '../types';
 import {
+  BASIN_SHAPE_OPTIONS,
+  BASIN_SHAPE_DESCRIPTIONS,
+} from '../data/promptOptions';
+import {
   INTERNAL_BACKGROUND_POOL,
   INTERNAL_MOOD_POOL,
   INTERNAL_KATEGORI_POOL,
@@ -123,6 +127,63 @@ export function generateThreePrompts(options: PromptOptions): GeneratedPromptIte
   // Shuffled compositions array for guaranteed compositional diversity across the 3 prompts
   const shuffledCompositions = [...COMPOSITION_FRAMEWORKS].sort(() => Math.random() - 0.5);
 
+  // Camera Distance / Framing resolution adhering to Reference Image priority
+  const selectedCameraDist = options.cameraDistance || options.cameraAngle || 'Random';
+  const hasRefImage = Boolean(options.referenceImageData);
+  const validDistances = [
+    'Extreme Close-Up',
+    'Close-Up',
+    'Medium Close-Up',
+    'Medium Shot',
+    'Medium Wide Shot',
+    'Wide Shot',
+    'Very Wide Shot',
+  ];
+
+  let resolvedCameraDistances: string[] = [];
+  if (hasRefImage) {
+    // When Reference Image is provided:
+    // 1. Reference Image is the PRIMARY SOURCE for Camera Distance and Framing.
+    // 2. Camera Distance menu must NOT override the Reference Image.
+    // 3. All 3 prompts MUST use the uniform Camera Distance and framing scale observed in the Reference Image.
+    const inferredRefDistance = 'Medium Close-Up';
+    resolvedCameraDistances = [inferredRefDistance, inferredRefDistance, inferredRefDistance];
+  } else if (selectedCameraDist && selectedCameraDist !== 'Random' && validDistances.includes(selectedCameraDist)) {
+    // Without Reference Image with specific Camera Distance: all 3 follow the selected distance
+    resolvedCameraDistances = [selectedCameraDist, selectedCameraDist, selectedCameraDist];
+  } else {
+    // Without Reference Image with 'Random': each prompt may use a distinct appropriate distance
+    const variedOptions = ['Close-Up', 'Medium Close-Up', 'Medium Shot', 'Medium Wide Shot'];
+    const shuffled = [...variedOptions].sort(() => Math.random() - 0.5);
+    resolvedCameraDistances = [shuffled[0], shuffled[1], shuffled[2]];
+  }
+
+  // Basin Shape resolution adhering to Shape Priority:
+  // EXPLICIT USER BASIN SHAPE > REFERENCE IMAGE BASIN SHAPE > RANDOM BASIN SHAPE
+  // Never override an explicit Basin Shape selection with a generic round basin.
+  const allShapes = BASIN_SHAPE_OPTIONS.filter((s) => s !== 'Random');
+  const selectedBasinShape = options.basinShape || 'Random';
+  const isExplicitShape = selectedBasinShape !== 'Random' && allShapes.includes(selectedBasinShape as any);
+
+  let resolvedBasinShapes: string[] = [];
+  if (isExplicitShape) {
+    // 1. Explicit user selection: strictly preserve selected shape in ALL 3 prompts
+    resolvedBasinShapes = [selectedBasinShape, selectedBasinShape, selectedBasinShape];
+  } else if (hasRefImage) {
+    // 2. Reference image basin shape: preserve structural silhouette across all 3 prompts
+    const inferredRefShape = 'Organic Freeform';
+    resolvedBasinShapes = [inferredRefShape, inferredRefShape, inferredRefShape];
+  } else {
+    // 3. Random basin shape: meaningful shape variation across prompts without repeatedly defaulting to round
+    const nonRoundShapes = allShapes.filter((s) => s !== 'Perfect Round');
+    const shuffledNonRound = [...nonRoundShapes].sort(() => Math.random() - 0.5);
+    resolvedBasinShapes = [
+      shuffledNonRound[0],
+      shuffledNonRound[1],
+      Math.random() < 0.2 ? 'Perfect Round' : shuffledNonRound[2],
+    ];
+  }
+
   for (let i = 0; i < 3; i++) {
     const promptId = `prompt_${Date.now()}_${i + 1}`;
 
@@ -182,24 +243,25 @@ export function generateThreePrompts(options: PromptOptions): GeneratedPromptIte
       'flowerId'
     );
 
-    // 7. Resolve Basin (Multi-dimensional 3-level system)
+    // 7. Resolve Basin (Multi-dimensional 3-level system with geometric silhouette enforcement)
+    const currentBasinShape = resolvedBasinShapes[i] || 'Organic Freeform';
+    const shapeDescription = BASIN_SHAPE_DESCRIPTIONS[currentBasinShape] || `${currentBasinShape} shaped water basin`;
+
     let basinMaterial: string;
-    let basinForm: string;
     let basinSurface: string;
 
     if (options.basin && options.basin !== 'Random') {
-      // User specified fixed basin in UI (e.g., 'Hand-carved Granite Chōzubachi')
+      // User specified fixed basin material/style in UI
       basinMaterial = options.basin.toLowerCase();
-      basinForm = pickRandomString(BASIN_INTERNAL_FORMS, batchUsedBasinForms, 'basinForm');
       basinSurface = pickRandomString(BASIN_INTERNAL_SURFACES, batchUsedBasinSurfaces);
     } else {
-      // Random basin: draw from expansive multi-dimensional pool
+      // Random basin material: draw from expansive multi-dimensional pool
       basinMaterial = pickRandomString(BASIN_INTERNAL_MATERIALS, batchUsedBasinMaterials, 'basinMaterial');
-      basinForm = pickRandomString(BASIN_INTERNAL_FORMS, batchUsedBasinForms, 'basinForm');
       basinSurface = pickRandomString(BASIN_INTERNAL_SURFACES, batchUsedBasinSurfaces);
     }
 
-    const basinDescription = `${basinForm} crafted from ${basinMaterial}, characterized by a ${basinSurface}. Prioritize the specified silhouette; do not automatically reinterpret it as a round, circular, or cylindrical basin.`;
+    const basinForm = currentBasinShape;
+    const basinDescription = `a ${shapeDescription} masterfully crafted from ${basinMaterial}, accented with a ${basinSurface}. The outer geometric silhouette visibly matches the exact ${currentBasinShape} profile as the actual basin vessel body (never replace the selected silhouette with a generic round basin).`;
 
     // 8. Resolve Bamboo
     const bambooPool = resolveSubPool(INTERNAL_BAMBOO_POOL, options.bamboo || 'Random');
@@ -253,17 +315,21 @@ export function generateThreePrompts(options: PromptOptions): GeneratedPromptIte
       flowerId: flowerVariation.id,
     });
 
+    const currentCameraDist = resolvedCameraDistances[i] || 'Medium Shot';
+
     results.push({
       id: promptId,
       index: i + 1,
-      title: `Prompt 0${i + 1} — ${bambooVariation.title} & ${basinForm}`,
+      title: `Prompt 0${i + 1} — ${currentBasinShape} Basin & ${bambooVariation.title}`,
       prompt: standalonePrompt,
       sceneDetails: {
         composition: composition.name,
         bambooPosition: bambooVariation.positionAndPlacement,
-        basinDetails: `${basinMaterial} | ${basinForm} | ${basinSurface}`,
+        basinDetails: `${basinMaterial} | ${currentBasinShape} | ${basinSurface}`,
+        basinShape: currentBasinShape,
         lightingAndAtmosphere: `${moodVariation.title} with ${moodVariation.lightingDirective}`,
         focalPoint: composition.focalPointDetail,
+        cameraDistance: currentCameraDist,
       },
       timestamp: Date.now(),
     });

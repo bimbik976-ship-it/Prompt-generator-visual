@@ -159,6 +159,41 @@ export const BASIN_OPTIONS = [
   'Carved Limestone Water Trough',
 ];
 
+export const BASIN_SHAPE_OPTIONS = [
+  'Random',
+  'Perfect Round',
+  'Perfect Oval',
+  'Heart / Love',
+  'Five-Point Star',
+  'Six-Point Star',
+  'Flower',
+  'Leaf',
+  'Crescent',
+  'Hexagonal',
+  'Square',
+  'Rectangular',
+  'Four-Lobed',
+  'Organic Freeform',
+] as const;
+
+export type BasinShapeOption = typeof BASIN_SHAPE_OPTIONS[number];
+
+export const BASIN_SHAPE_DESCRIPTIONS: Record<string, string> = {
+  'Perfect Round': 'symmetrical perfect circular water basin with an impeccably even, smooth circular outer silhouette (strictly round, never oval, irregular, asymmetrical, or organically distorted)',
+  'Perfect Oval': 'clearly elliptical oval water basin whose long and short axes are visibly different, exhibiting a smooth, symmetrical oval perimeter (strictly oval, never a circle)',
+  'Heart / Love': 'carved heart-shaped water basin where the actual stone outer silhouette visibly forms two distinct upper lobes and a central indentation tapering to a gentle lower point (the physical basin body itself is sculpted as a heart, not a circular bowl with heart motifs)',
+  'Five-Point Star': 'sculptural five-pointed star water basin whose outer silhouette clearly forms five distinct star points as part of the actual basin perimeter (the physical basin perimeter itself forms a five-pointed star, never replaced with a round bowl)',
+  'Six-Point Star': 'six-pointed star water basin sculpted with six distinct star points defining the actual outer basin silhouette and rim (the physical stone body itself forms a six-pointed star, never a circular basin)',
+  'Flower': 'multi-petaled floral-shaped water basin whose actual outer silhouette is sculpted with distinct petal-like lobes outlining a blossoming flower geometry (the vessel body itself is flower-shaped, not floral carvings inside a round bowl)',
+  'Leaf': 'elongated botanical leaf-shaped water basin with a tapered pointed tip, graceful curved leaf margins, and an organic leaf perimeter defining the actual outer basin silhouette',
+  'Crescent': 'crescent moon-shaped water basin with an elegant concave inner curve and arching convex outer curve defining the actual basin body silhouette',
+  'Hexagonal': 'six-sided geometric hexagonal water basin with six distinct planar edges and softened corners defining the actual outer basin silhouette (strictly hexagonal, never round)',
+  'Square': 'equilateral four-sided square stone water basin with four equal straight sides and distinct 90-degree corners defining the outer basin perimeter (strictly square geometry, not circular)',
+  'Rectangular': 'elongated rectangular stone water trough with visibly longer length than width and crisp rectangular planar edges defining the outer basin silhouette (strictly rectangular trough)',
+  'Four-Lobed': 'quatrefoil four-lobed water basin sculpted with four distinct symmetrical rounded lobes extending from the center to define the actual outer basin silhouette',
+  'Organic Freeform': 'sculpted organic freeform stone basin with an intentionally asymmetrical, non-circular wabi-sabi silhouette following flowing geological contours (strictly avoiding any circular or generic geometry)',
+};
+
 export const BAMBOO_OPTIONS = [
   'Random',
   'Single Green Bamboo Kakehi Spout',
@@ -170,6 +205,19 @@ export const BAMBOO_OPTIONS = [
   'Curved Bamboo Water Feature',
   'Layered Multi-Tier Spout',
 ];
+
+export const CAMERA_DISTANCE_OPTIONS = [
+  'Random',
+  'Extreme Close-Up',
+  'Close-Up',
+  'Medium Close-Up',
+  'Medium Shot',
+  'Medium Wide Shot',
+  'Wide Shot',
+  'Very Wide Shot',
+] as const;
+
+export type CameraDistanceOption = typeof CAMERA_DISTANCE_OPTIONS[number];
 
 export const CAMERA_ANGLE_LOCKED = 'Close environmental perspective, slightly above basin level, 3/4 front view, natural shallow depth of field';
 

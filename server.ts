@@ -287,8 +287,10 @@ app.post('/api/generate-prompts', async (req, res) => {
         dekorasi: options.dekorasi || 'Random',
         flower: options.flower || 'Random',
         basin: options.basin || 'Random',
+        basinShape: options.basinShape || 'Random',
         bamboo: options.bamboo || 'Random',
-        cameraAngle: 'Locked: Close environmental perspective, slightly above basin level, 3/4 front view, natural shallow depth of field',
+        cameraDistance: options.cameraDistance || options.cameraAngle || 'Random',
+        cameraAngle: options.cameraDistance || options.cameraAngle || 'Random',
         referenceImageData: typeof options.referenceImageData === 'string' ? options.referenceImageData : undefined,
         referenceImageName: typeof options.referenceImageName === 'string' ? options.referenceImageName : undefined,
       }
